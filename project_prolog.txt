@@ -1,0 +1,66 @@
+% Load necessary libraries
+:- use_module(library(csv)).
+:- use_module(library(random)).
+
+% Define employee features
+employee_features([date, quarter, department, day, team, targeted_productivity, smv, wip, over_time, incentive, overtime_2, incentive_2, idle_time, idle_men, actual_productivity]).
+
+% Decision tree rules (placeholder rules for demonstration)
+decision_tree_rule([_, 'Quarter2', _, 'Wednesday', _, _, _, _, _, _, _, _, _, _, _], high_performance).
+decision_tree_rule([_, 'Quarter2', _, 'Wednesday', _, _, _, _, _, _, _, _, _, _, _], medium_performance).
+decision_tree_rule([_, 'Quarter2', _, 'Wednesday', _, _, _, _, _, _, _, _, _, _, _], low_performance).
+
+% Load employee data from CSV file
+load_employee_data(File, Data) :-
+    csv_read_file(File, [_Header|Rows], []),
+    maplist(row_to_list, Rows, Data).
+
+row_to_list(Row, List) :-
+    Row =.. [row|List].
+
+% Split data into training and test sets
+split_data(Data, Train, Test) :-
+    random_permutation(Data, Shuffled),
+    append(Train, Test, Shuffled),
+    length(Train, TrainLength),
+    length(Test, TestLength),
+    TrainLength is round(0.8 * TestLength).
+
+% Train decision tree model (placeholder)
+train_decision_tree(_).
+
+% Predict employee performance based on features
+predict_employee_performance(Features, Performance) :-
+    decision_tree_rule(Features, Performance).
+
+% Evaluate performance for test set and calculate accuracy
+evaluate_accuracy(TestData, Accuracy) :-
+    include(predict_performance, TestData, PredictedData),
+    length(PredictedData, PredictedLength),
+    length(TestData, TotalLength),
+    Accuracy is PredictedLength / TotalLength * 100.
+
+predict_performance(Features) :-
+    predict_employee_performance(Features, _).
+
+% Test
+:- initialization(main).
+
+main :-
+    write('Enter the CSV file path: '),
+    read_string(user_input, "\n", "\r", _, FilePath),
+    load_employee_data(FilePath, Data),
+    split_data(Data, TrainData, TestData),
+    train_decision_tree(TrainData),
+    evaluate_accuracy(TestData, Accuracy),
+    format('Model accuracy: ~2f%~n', [Accuracy]),
+    write('Enter trial sample (comma-separated values): '),
+    read_string(user_input, "\n", "\r", _, SampleStr),
+    atomic_list_concat(SampleList, ',', SampleStr),
+    maplist(term_to_atom, SampleList, SampleFeatures),
+    predict_employee_performance(SampleFeatures, PredictedPerformance),
+    format('Predicted performance for trial sample: ~w~n', [PredictedPerformance]),
+    halt.
+
+term_to_atom(Term, Atom) :-
+    atom_string(Atom, Term).
